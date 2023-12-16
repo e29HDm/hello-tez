@@ -1,11 +1,34 @@
 archetype hello_world
 
-variable message : string = "Hello, World!"
+variable last_author : option<address> = none
 
-entry set_message(new_message : string) {
-    message := new_message
+asset messages identified by author to iterable_big_map {
+  author : address;
+  content : string;
+  timestamp : date = now;
 }
 
-entry reset_message() {
-    message := "Hello, World!"
+entry set_message(new_content : string) {
+  do_fail_if( messages.contains(caller), "Author has already added a message");
+
+  messages.add({
+    author = caller;
+    content = new_content
+  });
+
+  last_author := some(caller)
+}
+
+view get_last_message() : option<asset_value<messages>>  {
+  const last ?= last_author;
+  return messages[last]
+}
+
+view get_message_by_author(author_addr : address) : option<asset_value<messages>> {
+  return messages[author_addr]
+}
+
+
+view get_all_messages() : asset_view<messages> {
+  return messages.sort(desc(timestamp))
 }

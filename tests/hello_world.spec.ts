@@ -4,11 +4,14 @@ import {
   get_account,
   set_mockup,
   set_mockup_now,
+  expect_to_fail,
 } from "@completium/experiment-ts";
 import { hello_world } from "./binding/hello_world";
+import exp from "constants";
 
 /* Accounts */
 const alice = get_account("alice");
+const bob = get_account("bob");
 
 /* Initialisation */
 describe("Initialisation", () => {
@@ -33,20 +36,65 @@ describe("[HELLO WORLD] Contract Tests", () => {
     await hello_world.deploy({ as: alice });
   });
 
-  it('Initial message should be "Hello, World!"', async () => {
-    const currentMessage = await hello_world.get_message();
-    expect(currentMessage).to.equal("Hello, World!");
+  it("should get an undefined last message if no message has been set", async () => {
+    const message = await hello_world.view_get_last_message({ as: alice });
+    expect(message).to.be.undefined;
   });
 
-  it("Change message to custom text", async () => {
-    await hello_world.set_message("Bonjour, Monde!", { as: alice });
-    const newMessage = await hello_world.get_message();
-    expect(newMessage).to.equal("Bonjour, Monde!");
+  it("should get an undefined message by author if no message has been set", async () => {
+    const message = await hello_world.view_get_message_by_author(
+      alice.get_address(),
+      {
+        as: alice,
+      }
+    );
+    expect(message?.is_none()).to.be.true;
   });
 
-  it("Reset message to default", async () => {
-    await hello_world.reset_message({ as: alice });
-    const resetMessage = await hello_world.get_message();
-    expect(resetMessage).to.equal("Hello, World!");
+  it("Alice sets a new message", async () => {
+    await hello_world.set_message("Hello from Alice", { as: alice });
+    const message = await hello_world.view_get_last_message({ as: alice });
+    expect(message?.get().content).to.equal("Hello from Alice");
+    const messages = await hello_world.view_get_all_messages({ as: alice });
+    expect(messages?.length).to.equal(1);
+  });
+
+  it("should get an undefined message by author if Bob is the author and has not yet added a message", async () => {
+    const message = await hello_world.view_get_message_by_author(
+      bob.get_address(),
+      {
+        as: alice,
+      }
+    );
+    expect(message?.is_none()).to.be.true;
+  });
+
+  it("Bob sets a new message", async () => {
+    await hello_world.set_message("Hello from Bob", { as: bob });
+    const message = await hello_world.view_get_last_message({ as: bob });
+    expect(message?.get().content).to.equal("Hello from Bob");
+    const messages = await hello_world.view_get_all_messages({ as: alice });
+    expect(messages?.length).to.equal(2);
+  });
+
+  it("Bob tries to set a new message and fails", async () => {
+    await expect_to_fail(async () => {
+      await hello_world.set_message("Hello from Bob", { as: bob });
+    }, hello_world.errors.AUTHOR_HAS_ALREADY_ADDED_A_MESSAGE);
+  });
+
+  it("Retrieve message by Alice", async () => {
+    const message = await hello_world.view_get_message_by_author(
+      alice.get_address(),
+      { as: alice }
+    );
+    expect(message?.get().content).to.equal("Hello from Alice");
+  });
+
+  it("Retrieve all messages", async () => {
+    const messages = await hello_world.view_get_all_messages({ as: alice });
+    expect(messages?.length).to.equal(2);
+    expect(messages?.[0].toString()).to.equal(alice.get_address().toString());
+    expect(messages?.[1].toString()).to.equal(bob.get_address().toString());
   });
 });
