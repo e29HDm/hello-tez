@@ -1,0 +1,11 @@
+archetype hello_world
+
+variable message : string = "Hello, World!"
+
+entry set_message(new_message : string) {
+    message := new_message
+}
+
+entry reset_message() {
+    message := "Hello, World!"
+}
