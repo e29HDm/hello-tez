@@ -2,7 +2,7 @@ archetype hello_world
 
 variable last_author : option<address> = none
 
-asset messages identified by author to iterable_big_map {
+asset messages identified by author  {
   author : address;
   content : string;
   timestamp : date = now;
@@ -27,7 +27,6 @@ view get_last_message() : option<asset_value<messages>>  {
 view get_message_by_author(author_addr : address) : option<asset_value<messages>> {
   return messages[author_addr]
 }
-
 
 view get_all_messages() : asset_view<messages> {
   return messages.sort(desc(timestamp))

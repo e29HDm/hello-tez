@@ -7,7 +7,6 @@ import {
   expect_to_fail,
 } from "@completium/experiment-ts";
 import { hello_world } from "./binding/hello_world";
-import exp from "constants";
 
 /* Accounts */
 const alice = get_account("alice");
