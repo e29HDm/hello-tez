@@ -24,17 +24,10 @@ export type messages_container = Array<[
     att.Address,
     messages_value
 ]>;
-export const messages_container_mich_type: att.MichelineType = att.pair_array_to_mich_type([
-    att.pair_annot_to_mich_type("big_map", att.prim_annot_to_mich_type("address", []), att.pair_array_to_mich_type([
-        att.prim_annot_to_mich_type("nat", ["%index"]),
-        att.pair_array_to_mich_type([
-            att.prim_annot_to_mich_type("string", ["%content"]),
-            att.prim_annot_to_mich_type("timestamp", ["%timestamp"])
-        ], ["%value"])
-    ], ["%values"]), ["%values"]),
-    att.pair_annot_to_mich_type("big_map", att.prim_annot_to_mich_type("nat", []), att.prim_annot_to_mich_type("address", []), ["%keys"]),
-    att.prim_annot_to_mich_type("nat", ["%size"])
-], []);
+export const messages_container_mich_type: att.MichelineType = att.pair_annot_to_mich_type("map", att.prim_annot_to_mich_type("address", []), att.pair_array_to_mich_type([
+    att.prim_annot_to_mich_type("string", ["%content"]),
+    att.prim_annot_to_mich_type("timestamp", ["%timestamp"])
+], []), []);
 const set_message_arg_to_mich = (new_content: string): att.Micheline => {
     return att.string_to_mich(new_content);
 }
@@ -108,31 +101,10 @@ export class Hello_world {
         }
         throw new Error("Contract not initialised");
     }
-    async get_messages_value(key: att.Address): Promise<messages_value | undefined> {
+    async get_messages(): Promise<messages_container> {
         if (this.address != undefined) {
             const storage = await ex.get_raw_storage(this.address);
-            const raw_data = await ex.get_big_map_value(BigInt(att.Int.from_mich((att.pair_to_mich((storage as att.Mpair as att.Mpair).args.slice(1, 4)) as att.Mpair)?.args[0]).toString()), key.to_mich(), messages_key_mich_type);
-            const data = raw_data ? att.pair_to_mich((raw_data as att.Mpair).args.slice(1, 3)) : undefined;
-            if (data != undefined) {
-                return messages_value.from_mich(data);
-            }
-            else {
-                return undefined;
-            }
-        }
-        throw new Error("Contract not initialised");
-    }
-    async has_messages_value(key: att.Address): Promise<boolean> {
-        if (this.address != undefined) {
-            const storage = await ex.get_raw_storage(this.address);
-            const raw_data = await ex.get_big_map_value(BigInt(att.Int.from_mich((att.pair_to_mich((storage as att.Mpair as att.Mpair).args.slice(1, 4)) as att.Mpair)?.args[0]).toString()), key.to_mich(), messages_key_mich_type);
-            const data = raw_data ? att.pair_to_mich((raw_data as att.Mpair).args.slice(1, 3)) : undefined;
-            if (data != undefined) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return att.mich_to_map((storage as att.Mpair).args[1], (x, y) => [att.Address.from_mich(x), messages_value.from_mich(y)]);
         }
         throw new Error("Contract not initialised");
     }
