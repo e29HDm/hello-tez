@@ -12,5 +12,5 @@ wallet.tezos?.contract
 </script>
 
 <template>
-  <div>Hello</div>
+  <div>Hello Tez</div>
 </template>
