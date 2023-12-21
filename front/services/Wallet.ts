@@ -6,6 +6,7 @@ import {
   TezosOperationType,
   type Network,
 } from "@airgap/beacon-sdk";
+import { useSettings } from "./Settings";
 
 class Wallet {
   wallet: BeaconWallet | undefined;
@@ -17,9 +18,10 @@ class Wallet {
   private constructor() {}
 
   static async init(): Promise<Wallet> {
+    const { network, endpoint } = useSettings();
     const wallet = new Wallet();
-    const rpcUrl = "https://ghostnet.tezos.marigold.dev";
-    wallet.network = { type: NetworkType.GHOSTNET, rpcUrl };
+    const rpcUrl = endpoint;
+    wallet.network = { type: network, rpcUrl };
     wallet.wallet = new (await import("@taquito/beacon-wallet")).BeaconWallet({
       name: "Hello Tez",
       network: wallet.network,
